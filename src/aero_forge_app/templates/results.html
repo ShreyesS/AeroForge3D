@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Results</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script>
+        function showLoading(buttonId, spinnerId) {
+            document.getElementById(buttonId).style.display = "none";
+            document.getElementById(spinnerId).style.display = "block";
+        }
+    </script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Processing Results</h1>
+
+        <p><strong>Uploaded File:</strong> {{ filename }}</p>
+
+        {% if extracted_text %}
+            <h3>Extracted OCR Text:</h3>
+            <pre>{{ extracted_text }}</pre>
+        {% endif %}
+
+        {% if structured_data %}
+            <h3>Structured JSON Data</h3>
+            <pre>{{ structured_data | tojson(indent=4) }}</pre>
+
+            {% if image_url %}
+                <h3>2D Blueprint Rendering</h3>
+                <img src="{{ image_url }}" alt="2D Blueprint Image">
+            {% else %}
+                <form action="/generate-image" method="post" onsubmit="showLoading('image-btn', 'image-spinner')">
+                    <input type="hidden" name="filename" value="{{ filename }}">
+                    <button id="image-btn" type="submit">Generate 2D Blueprint Rendering</button>
+                    <div id="image-spinner" class="loading"></div>
+                </form>
+            {% endif %}
+        {% else %}
+            <form action="/process-json" method="post" onsubmit="showLoading('json-btn', 'json-spinner')">
+                <input type="hidden" name="filename" value="{{ filename }}">
+                <button id="json-btn" type="submit">Convert to Structured JSON</button>
+                <div id="json-spinner" class="loading"></div>
+            </form>
+        {% endif %}
+
+        {% if image_url %}
+            {% if sora_prompt %}
+                <h3>Sora Prompt:</h3>
+                <pre>{{ sora_prompt }}</pre>
+            {% else %}
+                <form action="/generate-sora" method="post" onsubmit="showLoading('sora-btn', 'sora-spinner')">
+                    <input type="hidden" name="filename" value="{{ filename }}">
+                    <input type="hidden" name="image_url" value="{{ image_url }}">  <!-- ✅ Pass image_url -->
+                    <button id="sora-btn" type="submit">Generate Sora Prompt</button>
+                    <div id="sora-spinner" class="loading"></div>
+                </form>
+            {% endif %}
+        {% endif %}
+
+        {% if sora_prompt %}
+            {% if luma_video %}
+                <h3>Luma Dream Machine 3D Visualization</h3>
+                <video width="640" height="360" controls>
+                    <source src="{{ luma_video }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            {% else %}
+                <form action="/generate-luma" method="post" onsubmit="showLoading('luma-btn', 'luma-spinner')">
+                    <input type="hidden" name="filename" value="{{ filename }}">
+                    <input type="hidden" name="sora_prompt" value="{{ sora_prompt }}">
+                    <button id="luma-btn" type="submit">Generate Luma Dream Machine Video</button>
+                    <div id="luma-spinner" class="loading"></div>
+                </form>
+            {% endif %}
+        {% endif %}
+
+        <br><br>
+        <a href="/" class="btn">Upload Another File</a>
+
+    </div>
+
+</body>
+</html>
